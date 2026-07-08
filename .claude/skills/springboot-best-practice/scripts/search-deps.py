@@ -24,6 +24,19 @@ def fetch_metadata():
         sys.exit(1)
 
 
+def fetch_maven_coords(boot_version=None):
+    url = f"{INITIALIZR_URL}/dependencies"
+    if boot_version:
+        url += f"?bootVersion={boot_version}"
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.load(resp)
+            return data.get("dependencies", {})
+    except Exception:
+        return {}
+
+
 def print_versions(data):
     print("=== Spring Boot versions ===")
     for v in data["bootVersion"]["values"]:
@@ -36,7 +49,7 @@ def print_versions(data):
         print(f"  {v['id']}{tag}")
 
 
-def print_deps(data, search: str):
+def print_deps(data, search: str, coords: dict):
     boot = data["bootVersion"]["default"]
     java = data["javaVersion"]["default"]
     print(f"Spring Boot: {boot}  |  Java default: {java}\n")
@@ -58,7 +71,6 @@ def print_deps(data, search: str):
             print(f"   {dep['id']:<32} {dep['name']}")
             desc = dep.get("description", "")
             if desc:
-                # Wrap description at 76 chars, indented to align under name
                 indent = "   " + " " * 32 + " "
                 words, line = [], ""
                 for word in desc.split():
@@ -69,6 +81,16 @@ def print_deps(data, search: str):
                         line = f"{line} {word}".lstrip()
                 if line:
                     print(f"{indent}{line}")
+
+            coord = coords.get(dep["id"])
+            if coord:
+                g = coord.get("groupId", "")
+                a = coord.get("artifactId", "")
+                scope = coord.get("scope", "")
+                parts = [f"groupId: {g}", f"artifactId: {a}"]
+                if scope and scope != "compile":
+                    parts.append(f"scope: {scope}")
+                print(f"   {'':32}  Maven: {', '.join(parts)}")
 
             links = dep.get("_links", {})
             if links:
@@ -98,7 +120,9 @@ def main():
         print_versions(data)
     else:
         search = args[0].lower() if args else ""
-        print_deps(data, search)
+        boot = data["bootVersion"]["default"]
+        coords = fetch_maven_coords(boot)
+        print_deps(data, search, coords)
 
 
 if __name__ == "__main__":
