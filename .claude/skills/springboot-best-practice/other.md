@@ -39,18 +39,6 @@ app:
 
 Use `@Value` only for a single, isolated property — not for groups of related settings.
 
-## Profiles
-
-Use Spring profiles to switch environment-specific config:
-
-```
-src/main/resources/
-├── application.yml           # shared defaults
-├── application-local.yml     # local dev overrides
-├── application-staging.yml   # staging overrides
-└── application-prod.yml      # production overrides
-```
-
 `application.yml` (shared):
 ```yaml
 spring:
@@ -63,23 +51,6 @@ logging:
   level:
     root: INFO
 ```
-
-`application-local.yml` (local dev only):
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/myapp
-    username: postgres
-    password: postgres
-
-logging:
-  level:
-    com.example: DEBUG
-```
-
-Activate: `SPRING_PROFILES_ACTIVE=local` or `--spring.profiles.active=local`.
-
-## Secrets — never commit them
 
 Always read secrets from environment variables or a secrets manager:
 
@@ -94,8 +65,6 @@ spring:
   datasource:
     password: supersecret123
 ```
-
-For local dev, use a `.env` file (git-ignored) loaded via `spring-dotenv` or Docker Compose's `env_file`.
 
 ## Database migrations
 
@@ -121,7 +90,7 @@ src/main/resources/db/migration/
 
 ## Actuator
 
-Expose only what you need. Never expose `/actuator` fully on a public port:
+Expose only what you need.
 
 ```yaml
 management:
@@ -129,24 +98,4 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
-  endpoint:
-    health:
-      show-details: when-authorized
-  server:
-    port: 8081    # separate management port, firewall-protected
-```
-
-## Connection pools (HikariCP defaults are usually fine)
-
-Tune only if you have evidence of pool exhaustion:
-
-```yaml
-spring:
-  datasource:
-    hikari:
-      maximum-pool-size: 10          # default: 10, raise if DB supports it
-      minimum-idle: 5
-      connection-timeout: 30000      # ms — fail fast rather than queue forever
-      idle-timeout: 600000
-      max-lifetime: 1800000
 ```

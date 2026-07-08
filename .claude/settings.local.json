@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Skill(claude-api)",
-      "WebFetch(domain:spring.io)"
+      "WebFetch(domain:spring.io)",
+      "Bash(curl -sf -H 'Accept: application/json' https://start.spring.io)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 *)",
+      "Bash(gh api *)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }
